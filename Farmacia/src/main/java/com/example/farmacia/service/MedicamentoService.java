@@ -5,31 +5,52 @@ import com.example.farmacia.repository.MedicamentoRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
-
 
 @Service
 public class MedicamentoService {
 
-    private final MedicamentoRepository repository;
+    private final MedicamentoRepository medicamentoRepository;
 
-    public MedicamentoService(MedicamentoRepository repository){
-        this.repository = repository;
+    public MedicamentoService(MedicamentoRepository medicamentoRepository) {
+        this.medicamentoRepository = medicamentoRepository;
+    }
+
+    public Medicamento crear(Medicamento medicamento) {
+
+        if (medicamentoRepository.existsByCodigo(medicamento.getCodigo())) {
+            throw new RuntimeException("Ya existe un medicamento con ese código");
+        }
+
+        return medicamentoRepository.save(medicamento);
     }
 
     public List<Medicamento> listarTodos() {
-        return repository.findAll();
+        return medicamentoRepository.findAll();
     }
 
-    public Optional<Medicamento> obtenerPorId(Long id) {
-        return repository.findById(id);
+    public Medicamento obtenerPorId(Long id) {
+        return medicamentoRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Medicamento no encontrado"));
     }
 
-    public Medicamento guardar(Medicamento medicamento) {
-        return repository.save(medicamento);
+    public Medicamento actualizar(Long id, Medicamento medicamento) {
+
+        Medicamento existente = obtenerPorId(id);
+
+        existente.setCodigo(medicamento.getCodigo());
+        existente.setNombre(medicamento.getNombre());
+        existente.setDescripcion(medicamento.getDescripcion());
+        existente.setLaboratorio(medicamento.getLaboratorio());
+        existente.setPrecio(medicamento.getPrecio());
+        existente.setStock(medicamento.getStock());
+        existente.setRequiereReceta(medicamento.isRequiereReceta());
+        existente.setFechaVencimiento(medicamento.getFechaVencimiento());
+
+        return medicamentoRepository.save(existente);
     }
 
     public void eliminar(Long id) {
-        repository.deleteById(id);
+        Medicamento medicamento = obtenerPorId(id);
+        medicamentoRepository.delete(medicamento);
     }
 }
